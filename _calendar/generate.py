@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from ics import Calendar, Event
 import requests
+from hashlib import md5
 import os
 
 
@@ -22,7 +23,8 @@ events = [
     CTFEvent('Dice CTF', ctftime_id=1838),
     CTFEvent("Insomni'hack", ctftime_id=1850),
     CTFEvent("KalmarCTF 2023", begin="2023-03-03T17:00:00Z", end="2023-03-05T17:00:00Z", location="https://kalmarc.tf/"),
-    CTFEvent('PlaidCTF 2023', ctftime_id=1770)
+    CTFEvent('PlaidCTF 2023', ctftime_id=1770),
+    CTFEvent('Hack-A-Sat 4 Qualifiers', ctftime_id=1837),
 ]
 # DON'T CHANGE ME
 
@@ -38,7 +40,7 @@ def main():
     c = Calendar()
 
     for event in events:
-        e = Event()
+        e = Event(uid = "UNASSIGNED")
 
         if event.ctftime_id:
             ctftime = ctftime_event(event.ctftime_id)
@@ -53,8 +55,10 @@ def main():
         e.end = event.end or e.end
         e.location = event.location or e.location
         e.description = event.comment
-        e.uid = e.uid or f"{hash(e.name)}@kitctf.de"
+        if e.uid == "UNASSIGNED":
+            e.uid = f"{md5(e.name.encode('utf-8')).hexdigest()}@kitctf.de"
 
+        assert e.uid != "UNASSIGNED"
         c.events.add(e)
 
     with open(os.path.dirname(os.path.realpath(__file__)) + '/../hack_harder.ics', 'w') as f:
